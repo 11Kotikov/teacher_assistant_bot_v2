@@ -25,3 +25,7 @@ class UserRepository:
             "UPDATE users SET group_id = ? WHERE telegram_id = ?",
             (group_id, telegram_id),
         )
+          
+    def get_all(self):
+        cur = self.db.execute("SELECT * FROM users")
+        return cur.fetchall()

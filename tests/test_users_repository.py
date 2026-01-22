@@ -4,7 +4,7 @@ from app.db.repositories.users import UserRepository
 
 
 def test_create_and_get_user():
-    db = Database()
+    db = Database(":memory:")
     repo = UserRepository(db)
 
     telegram_id = 123456789
@@ -20,7 +20,7 @@ def test_create_and_get_user():
     
 
 def test_create_and_get_groups():
-    db = Database()
+    db = Database(":memory:")
     repo = GroupRepository(db)
 
     repo.create("ИТ-15")
@@ -36,7 +36,7 @@ def test_create_and_get_groups():
     db.close()  
     
 def test_set_group_for_user():
-    db = Database()
+    db = Database(":memory:")
     user_repo = UserRepository(db)
     group_repo = GroupRepository(db)
 

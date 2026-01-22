@@ -1,17 +1,11 @@
 import sqlite3
-from pathlib import Path
-
-DB_PATH = Path("data")
-DB_PATH.mkdir(exist_ok=True)
-
-DATABASE_FILE = DB_PATH / "bot.db"
 
 
 class Database:
-    def __init__(self):
+    def __init__(self, db_path: str = "bot.db"):
         self.connection = sqlite3.connect(
-            DATABASE_FILE,
-            check_same_thread=False
+            db_path,
+            check_same_thread=False,
         )
         self.connection.row_factory = sqlite3.Row
 
