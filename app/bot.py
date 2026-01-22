@@ -2,12 +2,20 @@ import signal
 import sys
 import logging
 
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
-from telegram.ext import filters
+from telegram.ext import (
+    Application,
+    ConversationHandler,
+    CommandHandler,
+    MessageHandler,
+    filters,
+)
 
 from app.config import Config, validate_config
 from app.logging import setup_logging
 from app.handlers.auth import start, set_role
+from app.handlers.teacher import start_create_assignment
+from app.states.teacher_states import SELECT_SUBJECT
+
 
 def main() -> None:
     validate_config()
@@ -18,13 +26,23 @@ def main() -> None:
 
     app = Application.builder().token(Config.BOT_TOKEN).build()
 
+    # Команды
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, set_role))
 
+    # FSM преподавателя
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("create_assignment", start_create_assignment)],
+        states={
+            SELECT_SUBJECT: [],
+        },
+        fallbacks=[],
+    )
+    app.add_handler(conv_handler)
+
+    # Выбор роли (кнопки)
     role_filter = filters.Regex("^(👨‍🎓 Студент|👨‍🏫 Преподаватель)$")
-
     app.add_handler(MessageHandler(role_filter, set_role))
-    
+
     def shutdown(signum, frame):
         logger.info("Bot stopping...")
         app.stop()

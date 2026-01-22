@@ -44,3 +44,14 @@ CREATE TABLE IF NOT EXISTS submissions (
     UNIQUE (assignment_id, student_id)
 );
 """
+
+REVIEW_TABLE = """
+CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    submission_id INTEGER NOT NULL UNIQUE,
+    teacher_id INTEGER NOT NULL,
+    grade INTEGER,
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+"""
