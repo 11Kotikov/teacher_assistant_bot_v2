@@ -19,3 +19,9 @@ class UserRepository:
             "INSERT OR IGNORE INTO users (telegram_id, role) VALUES (?, ?)",
             (telegram_id, role)
         )
+
+    def set_group(self, telegram_id: int, group_id: int):
+        self.db.execute(
+            "UPDATE users SET group_id = ? WHERE telegram_id = ?",
+            (group_id, telegram_id),
+        )
