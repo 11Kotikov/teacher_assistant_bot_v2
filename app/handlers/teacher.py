@@ -1,7 +1,8 @@
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from app.states.teacher_states import ENTER_TITLE, SELECT_SUBJECT, SELECT_GROUP
+from app.db.repositories.assignments import AssignmentRepository
+from app.states.teacher_states import ENTER_DESCRIPTION, ENTER_TITLE, SELECT_SUBJECT, SELECT_GROUP
 from app.keyboards.inline import subjects_keyboard, groups_keyboard
 from app.db.database import Database
 from app.db.repositories.subjects import SubjectRepository
@@ -70,3 +71,24 @@ async def enter_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     return ENTER_DESCRIPTION
+
+async def enter_description(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    description = update.message.text
+    context.user_data["description"] = description
+
+    db = Database()
+    assignment_repo = AssignmentRepository(db)
+
+    assignment_repo.create(
+        title=context.user_data["title"],
+        description=context.user_data["description"],
+        subject_id=context.user_data["subject_id"],
+        group_id=context.user_data["group_id"],
+    )
+
+    db.close()
+
+    await update.message.reply_text("✅ Задание успешно создано!")
+
+    context.user_data.clear()
+    return ConversationHandler.END

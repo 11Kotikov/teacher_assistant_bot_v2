@@ -28,3 +28,10 @@ class SubmissionRepository:
             (assignment_id,),
         )
         return cur.fetchall()
+    
+    def exists(self, assignment_id: int, student_id: int) -> bool:
+        result = self.db.fetch_one(
+            "SELECT * FROM submissions WHERE assignment_id = ? AND student_id = ?",
+            (assignment_id, student_id)
+        )
+        return result is not None

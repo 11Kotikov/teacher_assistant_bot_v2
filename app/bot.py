@@ -6,6 +6,15 @@ from app.config import Config, validate_config
 from app.logging import setup_logging
 from app.handlers.auth import start, set_role
 
+from app.handlers.student import (
+    show_assignments, 
+    start_submit, 
+    select_assignment,
+    enter_solution,
+)
+
+from app.states.student_states import SELECT_ASSIGNMENT, ENTER_SOLUTION
+
 from telegram.ext import (
     Application,
     ConversationHandler,
@@ -20,12 +29,14 @@ from app.handlers.teacher import (
     select_subject,
     select_group,
     enter_title,
+    enter_description
 )
 
 from app.states.teacher_states import (
     SELECT_SUBJECT,
     SELECT_GROUP,
     ENTER_TITLE,
+    ENTER_DESCRIPTION,
 )
 
 
@@ -40,6 +51,7 @@ def main() -> None:
 
     # Команды
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("assignments", show_assignments))
 
     # FSM преподавателя
     conv_handler = ConversationHandler(
@@ -54,11 +66,31 @@ def main() -> None:
             ENTER_TITLE: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, enter_title),
             ],
+            ENTER_DESCRIPTION: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, enter_description),
+            ],
         },
         fallbacks=[],
     )
     
     app.add_handler(conv_handler)
+    
+    # FSM студента
+    student_conv = ConversationHandler(
+        entry_points=[CommandHandler("submit", start_submit)],
+        states={
+            SELECT_ASSIGNMENT: [
+                CallbackQueryHandler(select_assignment, pattern="^assignment_"),
+            ],
+            ENTER_SOLUTION: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, enter_solution),
+            ],
+        },
+        fallbacks=[],
+    )
+
+    app.add_handler(student_conv)
+
 
     # Выбор роли (кнопки)
     role_filter = filters.Regex("^(👨‍🎓 Студент|👨‍🏫 Преподаватель)$")

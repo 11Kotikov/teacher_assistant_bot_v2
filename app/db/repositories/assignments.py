@@ -28,3 +28,12 @@ class AssignmentRepository:
             (group_id,),
         )
         return cur.fetchall()
+    
+    def get_all(self):
+        return self.db.fetch_all("SELECT * FROM assignments")
+    
+    def get_by_group(self, group_id: int):
+        return self.db.fetch_all(
+            "SELECT * FROM assignments WHERE group_id = ?",
+            (group_id,)
+        )
