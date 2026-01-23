@@ -8,14 +8,14 @@ from telegram.ext import (
     CommandHandler,
     MessageHandler,
     filters,
+    CallbackQueryHandler
 )
 
 from app.config import Config, validate_config
 from app.logging import setup_logging
 from app.handlers.auth import start, set_role
-from app.handlers.teacher import start_create_assignment
-from app.states.teacher_states import SELECT_SUBJECT
-
+from app.handlers.teacher import start_create_assignment, select_subject
+from app.states.teacher_states import SELECT_SUBJECT, SELECT_GROUP
 
 def main() -> None:
     validate_config()
@@ -31,11 +31,13 @@ def main() -> None:
 
     # FSM преподавателя
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("create_assignment", start_create_assignment)],
-        states={
-            SELECT_SUBJECT: [],
-        },
-        fallbacks=[],
+    entry_points=[CommandHandler("create_assignment", start_create_assignment)],
+    states={
+        SELECT_SUBJECT: [
+            CallbackQueryHandler(select_subject, pattern="^subject_"),
+        ],
+    },
+    fallbacks=[],
     )
     app.add_handler(conv_handler)
 
