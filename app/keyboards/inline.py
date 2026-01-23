@@ -7,3 +7,10 @@ def subjects_keyboard(subjects):
         for s in subjects
     ]
     return InlineKeyboardMarkup(keyboard)
+
+def groups_keyboard(groups):
+    keyboard = [
+        [InlineKeyboardButton(g["name"], callback_data=f"group_{g['id']}")]
+        for g in groups
+    ]
+    return InlineKeyboardMarkup(keyboard)

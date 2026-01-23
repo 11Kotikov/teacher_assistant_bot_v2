@@ -2,6 +2,10 @@ import signal
 import sys
 import logging
 
+from app.config import Config, validate_config
+from app.logging import setup_logging
+from app.handlers.auth import start, set_role
+
 from telegram.ext import (
     Application,
     ConversationHandler,
@@ -11,11 +15,19 @@ from telegram.ext import (
     CallbackQueryHandler
 )
 
-from app.config import Config, validate_config
-from app.logging import setup_logging
-from app.handlers.auth import start, set_role
-from app.handlers.teacher import start_create_assignment, select_subject
-from app.states.teacher_states import SELECT_SUBJECT, SELECT_GROUP
+from app.handlers.teacher import (
+    start_create_assignment,
+    select_subject,
+    select_group,
+    enter_title,
+)
+
+from app.states.teacher_states import (
+    SELECT_SUBJECT,
+    SELECT_GROUP,
+    ENTER_TITLE,
+)
+
 
 def main() -> None:
     validate_config()
@@ -31,14 +43,21 @@ def main() -> None:
 
     # FSM преподавателя
     conv_handler = ConversationHandler(
-    entry_points=[CommandHandler("create_assignment", start_create_assignment)],
-    states={
-        SELECT_SUBJECT: [
-            CallbackQueryHandler(select_subject, pattern="^subject_"),
-        ],
-    },
-    fallbacks=[],
+        entry_points=[CommandHandler("create_assignment", start_create_assignment)],
+        states={
+            SELECT_SUBJECT: [
+                CallbackQueryHandler(select_subject, pattern="^subject_"),
+            ],
+            SELECT_GROUP: [
+                CallbackQueryHandler(select_group, pattern="^group_"),
+            ],
+            ENTER_TITLE: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, enter_title),
+            ],
+        },
+        fallbacks=[],
     )
+    
     app.add_handler(conv_handler)
 
     # Выбор роли (кнопки)
