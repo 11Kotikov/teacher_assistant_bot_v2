@@ -2,6 +2,15 @@ import signal
 import sys
 import logging
 
+from telegram.ext import (
+    Application,
+    ConversationHandler,
+    CommandHandler,
+    MessageHandler,
+    filters,
+    CallbackQueryHandler
+)
+
 from app.config import Config, validate_config
 from app.logging import setup_logging
 from app.handlers.auth import start, set_role
@@ -15,14 +24,6 @@ from app.handlers.student import (
 
 from app.states.student_states import SELECT_ASSIGNMENT, ENTER_SOLUTION
 
-from telegram.ext import (
-    Application,
-    ConversationHandler,
-    CommandHandler,
-    MessageHandler,
-    filters,
-    CallbackQueryHandler
-)
 
 from app.handlers.teacher import (
     start_create_assignment,
@@ -39,6 +40,18 @@ from app.states.teacher_states import (
     ENTER_DESCRIPTION,
 )
 
+from app.guards.role_guard import role_required
+
+from app.handlers.teacher_review import (
+    select_review_assignment,
+    start_review_submissions,
+    select_review_group,
+)
+
+from app.states.teacher_review_states import (
+    SELECT_REVIEW_GROUP,
+    SELECT_REVIEW_ASSIGNMENT,
+)
 
 def main() -> None:
     validate_config()
@@ -51,11 +64,16 @@ def main() -> None:
 
     # Команды
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("assignments", show_assignments))
-
+ 
     # FSM преподавателя
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("create_assignment", start_create_assignment)],
+    teacher_conv = ConversationHandler(
+        entry_points=[
+            CommandHandler("create_assignment", start_create_assignment),
+            MessageHandler(
+                filters.Regex("^➕ Создать задание$"),
+                start_create_assignment,
+            ),
+        ],
         states={
             SELECT_SUBJECT: [
                 CallbackQueryHandler(select_subject, pattern="^subject_"),
@@ -72,8 +90,27 @@ def main() -> None:
         },
         fallbacks=[],
     )
-    
-    app.add_handler(conv_handler)
+
+    review_conv = ConversationHandler(
+        entry_points=[
+            MessageHandler(
+                filters.Regex("^📂 Проверить работы$"),
+                start_review_submissions,
+            ),
+        ],
+        states={
+            SELECT_REVIEW_GROUP: [
+                CallbackQueryHandler(select_review_group, pattern="^group_"),
+            ],
+            SELECT_REVIEW_ASSIGNMENT: [
+                CallbackQueryHandler(select_review_assignment, pattern="^assignment_"),
+            ],
+        },
+        fallbacks=[],
+    )
+
+    app.add_handler(review_conv)
+    app.add_handler(teacher_conv)
     
     # FSM студента
     student_conv = ConversationHandler(

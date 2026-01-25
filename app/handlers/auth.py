@@ -20,6 +20,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     telegram_id = update.effective_user.id
     user = service.get_or_create_user(telegram_id)
 
+    if user["role"] is None:
+        await update.message.reply_text(
+            "👋 Привет! Выберите вашу роль:",
+            reply_markup=ROLE_KEYBOARD,
+        )
+        db.close()
+        return
+
     if user["role"] == "student":
         await update.message.reply_text(
             "👋 С возвращением, студент!",
@@ -30,6 +38,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             "👋 С возвращением, преподаватель!",
             reply_markup=TEACHER_MENU,
         )
+
+    db.close()
 
 
 async def set_role(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -54,8 +64,3 @@ async def set_role(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     db = Database()
     service = UsersService(db)
     service.set_role(telegram_id, role_map[text])
-
-    await update.message.reply_text(
-        f"✅ Роль установлена: {role_map[text]}",
-        reply_markup=None,
-    )

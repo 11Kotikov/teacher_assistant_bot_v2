@@ -1,16 +1,32 @@
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from app.db.repositories.assignments import AssignmentRepository
-from app.states.teacher_states import ENTER_DESCRIPTION, ENTER_TITLE, SELECT_SUBJECT, SELECT_GROUP
-from app.keyboards.inline import subjects_keyboard, groups_keyboard
 from app.db.database import Database
+
+from app.db.repositories.assignments import AssignmentRepository
 from app.db.repositories.subjects import SubjectRepository
 from app.db.repositories.groups import GroupRepository
+from app.db.repositories.users import UserRepository  # ← добавь импорт
+
+
+from app.states.teacher_states import ENTER_DESCRIPTION, ENTER_TITLE, SELECT_SUBJECT, SELECT_GROUP
+
+from app.keyboards.inline import subjects_keyboard, groups_keyboard
+
 
 
 async def start_create_assignment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db = Database()
+    
+    user_repo = UserRepository(db)
+
+    user = user_repo.get_by_telegram_id(update.effective_user.id)
+
+    if not user or user["role"] != "teacher":
+        await update.message.reply_text("⛔ У вас нет прав на эту команду.")
+        db.close()
+        return ConversationHandler.END
+    
     subject_repo = SubjectRepository(db)
 
     teacher_id = update.effective_user.id

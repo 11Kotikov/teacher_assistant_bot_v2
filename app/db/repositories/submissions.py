@@ -24,8 +24,13 @@ class SubmissionRepository:
 
     def get_by_assignment(self, assignment_id: int):
         cur = self.db.execute(
-            "SELECT * FROM submissions WHERE assignment_id = ?",
-            (assignment_id,),
+        """
+        SELECT *
+        FROM submissions
+        WHERE assignment_id = ?
+        ORDER BY created_at ASC
+        """,
+        (assignment_id,)
         )
         return cur.fetchall()
     
