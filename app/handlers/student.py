@@ -6,27 +6,20 @@ from app.db.repositories.submissions import SubmissionRepository
 from app.db.repositories.users import UserRepository
 from app.db.repositories.assignments import AssignmentRepository
 
+from app.guards.student_group_guard import ensure_student_has_group
 from app.keyboards.inline import assignments_keyboard
 
-from app.states.student_states import SELECT_ASSIGNMENT
-from app.states.student_states import ENTER_SOLUTION
+from app.states.student_states import SELECT_ASSIGNMENT, ENTER_SOLUTION
 
 async def show_assignments(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    db = Database()
+    if not await ensure_student_has_group(update, context):
+        return
 
+    db = Database()
     user_repo = UserRepository(db)
     assignment_repo = AssignmentRepository(db)
 
-    telegram_id = update.effective_user.id
-    user = user_repo.get_by_telegram_id(telegram_id)
-
-    if not user or not user["group_id"]:
-        await update.message.reply_text(
-            "❗ Вам не назначена группа. Обратитесь к преподавателю."
-        )
-        db.close()
-        return
-
+    user = user_repo.get_by_telegram_id(update.effective_user.id)
     assignments = assignment_repo.get_by_group(user["group_id"])
 
     if not assignments:
@@ -42,25 +35,14 @@ async def show_assignments(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db.close()
 
 async def start_submit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await ensure_student_has_group(update, context):
+        return ConversationHandler.END
+
     db = Database()
     user_repo = UserRepository(db)
     assignment_repo = AssignmentRepository(db)
 
     user = user_repo.get_by_telegram_id(update.effective_user.id)
-    assignments = assignment_repo.get_by_group(user["group_id"])
-
-    if not user or user["role"] != "student":
-        await update.message.reply_text("⛔ Эта команда только для студентов.")
-        db.close()
-        return ConversationHandler.END
-
-    if not user["group_id"]:
-        await update.message.reply_text(
-            "❗ Вам не назначена группа. Обратитесь к преподавателю."
-        )
-        db.close()
-        return ConversationHandler.END
-
     assignments = assignment_repo.get_by_group(user["group_id"])
 
     if not assignments:

@@ -25,3 +25,9 @@ class GroupRepository:
             (name,)
         )
         return cursor.fetchone()
+    
+    def get_by_id(self, group_id: int):
+        return self.db.fetch_one(
+            "SELECT * FROM groups WHERE id = ?",
+            (group_id,)
+        )

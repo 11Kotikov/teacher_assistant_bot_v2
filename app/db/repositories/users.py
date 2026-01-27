@@ -20,7 +20,7 @@ class UserRepository:
             (telegram_id, role)
         )
 
-    def set_group(self, telegram_id: int, group_id: int):
+    def assign_to_group(self, telegram_id: int, group_id: int):
         self.db.execute(
             "UPDATE users SET group_id = ? WHERE telegram_id = ?",
             (group_id, telegram_id),
@@ -49,3 +49,14 @@ class UserRepository:
     def get_all(self):
         cur = self.db.execute("SELECT * FROM users")
         return cur.fetchall()
+    
+    
+    def update_profile(self, telegram_id: int, first_name: str, last_name: str):
+        self.db.execute(
+            """
+            UPDATE users
+            SET first_name = ?, last_name = ?
+            WHERE telegram_id = ?
+            """,
+            (first_name, last_name, telegram_id),
+        )

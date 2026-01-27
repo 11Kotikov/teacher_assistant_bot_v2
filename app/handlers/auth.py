@@ -29,6 +29,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     if user["role"] == "student":
+        # если профиль НЕ заполнен — просто выходим
+        if not user.get("first_name") or not user.get("last_name"):
+            db.close()
+            return
+
         await update.message.reply_text(
             "👋 С возвращением, студент!",
             reply_markup=STUDENT_MENU,

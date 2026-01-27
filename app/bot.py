@@ -15,37 +15,50 @@ from app.config import Config, validate_config
 from app.logging import setup_logging
 from app.handlers.auth import start, set_role
 
+# ---------- STUDENT ----------
 from app.handlers.student import (
-    show_assignments, 
-    start_submit, 
+    start_submit,
     select_assignment,
     enter_solution,
 )
 
-from app.states.student_states import SELECT_ASSIGNMENT, ENTER_SOLUTION
+from app.states.student_states import (
+    SELECT_ASSIGNMENT,
+    ENTER_SOLUTION,
+)
 
+from app.handlers.student_profile import (
+    start_student_profile,
+    enter_first_name,
+    enter_last_name,
+)
 
+from app.states.student_profile_states import (
+    ENTER_FIRST_NAME,
+    ENTER_LAST_NAME,
+)
+
+# ---------- TEACHER: CREATE ASSIGNMENT ----------
 from app.handlers.teacher import (
     start_create_assignment,
     select_subject,
-    select_group,
+    select_group as select_assignment_group,
     enter_title,
-    enter_description
+    enter_description,
 )
 
 from app.states.teacher_states import (
     SELECT_SUBJECT,
-    SELECT_GROUP,
+    SELECT_GROUP as SELECT_ASSIGNMENT_GROUP,
     ENTER_TITLE,
     ENTER_DESCRIPTION,
 )
 
-from app.guards.role_guard import role_required
-
+# ---------- TEACHER: REVIEW ----------
 from app.handlers.teacher_review import (
-    select_review_assignment,
     start_review_submissions,
     select_review_group,
+    select_review_assignment,
 )
 
 from app.states.teacher_review_states import (
@@ -53,8 +66,27 @@ from app.states.teacher_review_states import (
     SELECT_REVIEW_ASSIGNMENT,
 )
 
-from app.handlers.teacher_groups import start_groups, select_group
-from app.states.teacher_groups_states import SELECT_GROUP
+# ---------- TEACHER: GROUPS ----------
+from app.handlers.teacher_groups import (
+    start_groups,
+    select_group as select_groups_group,
+)
+
+from app.states.teacher_groups_states import (
+    SELECT_GROUP as SELECT_GROUPS_GROUP,
+)
+
+# ---------- TEACHER: ASSIGN STUDENT ----------
+from app.handlers.teacher_assign import (
+    start_assign_student,
+    select_assign_group,
+    select_assign_student,
+)
+
+from app.states.teacher_assign_states import (
+    SELECT_ASSIGN_GROUP,
+    SELECT_ASSIGN_STUDENT
+)
 
 def main() -> None:
     validate_config()
@@ -65,24 +97,18 @@ def main() -> None:
 
     app = Application.builder().token(Config.BOT_TOKEN).build()
 
-    # Команды
-    app.add_handler(CommandHandler("start", start))
- 
-    # FSM преподавателя
+    # ---------- CREATE ASSIGNMENT FSM ----------
     teacher_conv = ConversationHandler(
         entry_points=[
             CommandHandler("create_assignment", start_create_assignment),
-            MessageHandler(
-                filters.Regex("^➕ Создать задание$"),
-                start_create_assignment,
-            ),
+            MessageHandler(filters.Regex("^➕ Создать задание$"), start_create_assignment),
         ],
         states={
             SELECT_SUBJECT: [
                 CallbackQueryHandler(select_subject, pattern="^subject_"),
             ],
-            SELECT_GROUP: [
-                CallbackQueryHandler(select_group, pattern="^group_"),
+            SELECT_ASSIGNMENT_GROUP: [
+                CallbackQueryHandler(select_assignment_group, pattern="^group_"),
             ],
             ENTER_TITLE: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, enter_title),
@@ -94,12 +120,10 @@ def main() -> None:
         fallbacks=[],
     )
 
+    # ---------- REVIEW FSM ----------
     review_conv = ConversationHandler(
         entry_points=[
-            MessageHandler(
-                filters.Regex("^📂 Проверить работы$"),
-                start_review_submissions,
-            ),
+            MessageHandler(filters.Regex("^📂 Проверить работы$"), start_review_submissions),
         ],
         states={
             SELECT_REVIEW_GROUP: [
@@ -111,24 +135,37 @@ def main() -> None:
         },
         fallbacks=[],
     )
-    
+
+    # ---------- GROUPS FSM ----------
     groups_conv = ConversationHandler(
         entry_points=[
-            MessageHandler(filters.Regex("^👥 Группы$"), start_groups)
+            MessageHandler(filters.Regex("^👥 Группы$"), start_groups),
         ],
         states={
-            SELECT_GROUP: [
-                CallbackQueryHandler(select_group, pattern="^group_"),
+            SELECT_GROUPS_GROUP: [
+                CallbackQueryHandler(select_groups_group, pattern="^group_"),
             ],
         },
         fallbacks=[],
     )
 
-    app.add_handler(teacher_conv)
-    app.add_handler(review_conv)
-    app.add_handler(groups_conv)
+    # ---------- ASSIGN STUDENT FSM (D3.1) ----------
+    assign_student_conv = ConversationHandler(
+    entry_points=[
+        MessageHandler(filters.Regex("^➕ Назначить студента$"), start_assign_student)
+    ],
+    states={
+        SELECT_ASSIGN_GROUP: [
+            CallbackQueryHandler(select_assign_group, pattern="^group_"),
+        ],
+        SELECT_ASSIGN_STUDENT: [
+            CallbackQueryHandler(select_assign_student, pattern="^student_"),
+        ],
+    },
+    fallbacks=[],
+)
 
-    # FSM студента
+    # ---------- STUDENT FSM ----------
     student_conv = ConversationHandler(
         entry_points=[CommandHandler("submit", start_submit)],
         states={
@@ -141,11 +178,33 @@ def main() -> None:
         },
         fallbacks=[],
     )
+    
+    student_profile_conv = ConversationHandler(
+        entry_points=[
+            CommandHandler("start", start_student_profile),
+        ],
+        states={
+            ENTER_FIRST_NAME: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, enter_first_name),
+            ],
+            ENTER_LAST_NAME: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, enter_last_name),
+            ],
+        },
+        fallbacks=[],
+    )
 
+    # Register FSMs
+    app.add_handler(teacher_conv)
+    app.add_handler(review_conv)
+    app.add_handler(groups_conv)
+    app.add_handler(assign_student_conv)
     app.add_handler(student_conv)
+    app.add_handler(student_profile_conv)
+    # /start
+    app.add_handler(CommandHandler("start", start))
 
-
-    # Выбор роли (кнопки)
+    # Role selection
     role_filter = filters.Regex("^(👨‍🎓 Студент|👨‍🏫 Преподаватель)$")
     app.add_handler(MessageHandler(role_filter, set_role))
 
@@ -159,7 +218,6 @@ def main() -> None:
     signal.signal(signal.SIGTERM, shutdown)
 
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()
