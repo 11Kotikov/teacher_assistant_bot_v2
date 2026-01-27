@@ -10,15 +10,19 @@ async def ensure_student_has_group(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> bool:
     db = Database()
-    repo = UserRepository(db)
+    user_repo = UserRepository(db)
 
-    user = repo.get_by_telegram_id(update.effective_user.id)
+    user = user_repo.get_by_telegram_id(update.effective_user.id)
     db.close()
 
     if not user or not user["group_id"]:
         await update.message.reply_text(
-            "❗ Вы ещё не прикреплены к группе.\n"
-            "Обратитесь к преподавателю."
+            "❗ Вы пока *не назначены в группу*.\n\n"
+            "📌 Что делать дальше:\n"
+            "• Обратитесь к преподавателю\n"
+            "• Или дождитесь, когда вас добавят в группу\n\n"
+            "⏳ После этого задания появятся автоматически.",
+            parse_mode="Markdown",
         )
         return False
 
