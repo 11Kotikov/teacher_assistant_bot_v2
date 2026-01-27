@@ -54,8 +54,19 @@ async def start_submit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db.close()
         return ConversationHandler.END
 
+    if not user["group_id"]:
+        await update.message.reply_text(
+            "❗ Вам не назначена группа. Обратитесь к преподавателю."
+        )
+        db.close()
+        return ConversationHandler.END
+
+    assignments = assignment_repo.get_by_group(user["group_id"])
+
     if not assignments:
-        await update.message.reply_text("Для вашей группы нет заданий.")
+        await update.message.reply_text(
+            "📭 Для вашей группы пока нет заданий."
+        )
         db.close()
         return ConversationHandler.END
 

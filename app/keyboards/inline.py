@@ -21,3 +21,19 @@ def assignments_keyboard(assignments):
         for a in assignments
     ]
     return InlineKeyboardMarkup(keyboard)
+
+def students_keyboard(students):
+    keyboard = []
+
+    for s in students:
+        name = " ".join(filter(None, [s["first_name"], s["last_name"]]))
+        if not name:
+            name = f"ID {s['telegram_id']}"
+
+        keyboard.append([
+            InlineKeyboardButton(
+                name,
+                callback_data=f"student_{s['telegram_id']}"
+            )
+        ])
+    return InlineKeyboardMarkup(keyboard)

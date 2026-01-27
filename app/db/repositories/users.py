@@ -25,6 +25,26 @@ class UserRepository:
             "UPDATE users SET group_id = ? WHERE telegram_id = ?",
             (group_id, telegram_id),
         )
+        
+    def get_students_by_group(self, group_id: int):
+        return self.db.fetch_all(
+            """
+            SELECT telegram_id, first_name, last_name
+            FROM users
+            WHERE role = 'student' AND group_id = ?
+            """,
+            (group_id,),
+        )
+
+    def get_students_without_group(self):
+        return self.db.fetch_all(
+            """
+            SELECT telegram_id, first_name, last_name
+            FROM users
+            WHERE role = 'student' AND group_id IS NULL
+            """
+        )
+
           
     def get_all(self):
         cur = self.db.execute("SELECT * FROM users")

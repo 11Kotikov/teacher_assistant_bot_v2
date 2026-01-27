@@ -53,6 +53,9 @@ from app.states.teacher_review_states import (
     SELECT_REVIEW_ASSIGNMENT,
 )
 
+from app.handlers.teacher_groups import start_groups, select_group
+from app.states.teacher_groups_states import SELECT_GROUP
+
 def main() -> None:
     validate_config()
     setup_logging(Config.LOG_LEVEL)
@@ -108,10 +111,23 @@ def main() -> None:
         },
         fallbacks=[],
     )
-
-    app.add_handler(review_conv)
-    app.add_handler(teacher_conv)
     
+    groups_conv = ConversationHandler(
+        entry_points=[
+            MessageHandler(filters.Regex("^👥 Группы$"), start_groups)
+        ],
+        states={
+            SELECT_GROUP: [
+                CallbackQueryHandler(select_group, pattern="^group_"),
+            ],
+        },
+        fallbacks=[],
+    )
+
+    app.add_handler(teacher_conv)
+    app.add_handler(review_conv)
+    app.add_handler(groups_conv)
+
     # FSM студента
     student_conv = ConversationHandler(
         entry_points=[CommandHandler("submit", start_submit)],

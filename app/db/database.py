@@ -1,8 +1,8 @@
 import sqlite3
-import os
+from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "data", "bot.db")
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+DB_PATH = BASE_DIR / "data" / "bot.db"
 
 
 class Database:
