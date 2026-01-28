@@ -10,9 +10,9 @@ class UserRepository:
     def get_by_telegram_id(self, telegram_id: int):
         cursor = self.db.execute(
             "SELECT * FROM users WHERE telegram_id = ?",
-            (telegram_id,)
+            (telegram_id,),
         )
-        return cursor.fetchone()
+        return self._row_to_dict(cursor.fetchone())
 
     def create(self, telegram_id: int, role: str | None = None):
         self.db.execute(
@@ -47,8 +47,8 @@ class UserRepository:
 
           
     def get_all(self):
-        cur = self.db.execute("SELECT * FROM users")
-        return cur.fetchall()
+        cursor = self.db.execute("SELECT * FROM users")
+        return cursor.fetchall()
     
     
     def update_profile(self, telegram_id: int, first_name: str, last_name: str):
@@ -60,3 +60,6 @@ class UserRepository:
             """,
             (first_name, last_name, telegram_id),
         )
+        
+    def _row_to_dict(self, row):
+        return dict(row) if row else None

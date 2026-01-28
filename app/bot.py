@@ -13,7 +13,7 @@ from telegram.ext import (
 
 from app.config import Config, validate_config
 from app.logging import setup_logging
-from app.handlers.auth import start, set_role
+from app.handlers.auth import start
 
 # ---------- STUDENT ----------
 from app.handlers.student import (
@@ -30,9 +30,9 @@ from app.states.student_states import (
 )
 
 from app.handlers.student_profile import (
-    start_student_profile,
-    enter_first_name,
-    enter_last_name,
+    handle_first_name,
+    handle_last_name,
+    start_registration,
 )
 
 from app.states.student_profile_states import (
@@ -206,35 +206,27 @@ def main() -> None:
     
     student_profile_conv = ConversationHandler(
         entry_points=[
-            MessageHandler(
-                filters.Regex("^👤 Профиль$"),
-                start_student_profile,
-            ),
+            CommandHandler("start", start_registration),
         ],
         states={
             ENTER_FIRST_NAME: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, enter_first_name),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_first_name),
             ],
             ENTER_LAST_NAME: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, enter_last_name),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_last_name),
             ],
         },
         fallbacks=[],
     )
 
     # Register FSMs
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(student_profile_conv)
     app.add_handler(teacher_conv)
     app.add_handler(review_conv)
     app.add_handler(groups_conv)
     app.add_handler(assign_student_conv)
     app.add_handler(student_conv)
-    app.add_handler(student_profile_conv)
-    # /start
-    app.add_handler(CommandHandler("start", start))
-
-    # Role selection
-    role_filter = filters.Regex("^(👨‍🎓 Студент|👨‍🏫 Преподаватель)$")
-    app.add_handler(MessageHandler(role_filter, set_role))
 
     def shutdown(signum, frame):
         logger.info("Bot stopping...")
