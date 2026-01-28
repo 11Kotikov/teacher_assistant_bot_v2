@@ -30,9 +30,8 @@ from app.states.student_states import (
 )
 
 from app.handlers.student_profile import (
-    handle_first_name,
-    handle_last_name,
-    start_registration,
+    set_first_name,
+    set_last_name,
 )
 
 from app.states.student_profile_states import (
@@ -166,7 +165,7 @@ def main() -> None:
     },
     fallbacks=[],
 )
-    
+
     # ---------- STUDENT MENU HANDLERS ----------
 
     app.add_handler(
@@ -203,24 +202,23 @@ def main() -> None:
         },
         fallbacks=[],
     )
-    
+
     student_profile_conv = ConversationHandler(
         entry_points=[
-            CommandHandler("start", start_registration),
+            CommandHandler("start", start),
         ],
         states={
             ENTER_FIRST_NAME: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_first_name),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, set_first_name),
             ],
             ENTER_LAST_NAME: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_last_name),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, set_last_name),
             ],
         },
         fallbacks=[],
     )
 
     # Register FSMs
-    app.add_handler(CommandHandler("start", start))
     app.add_handler(student_profile_conv)
     app.add_handler(teacher_conv)
     app.add_handler(review_conv)

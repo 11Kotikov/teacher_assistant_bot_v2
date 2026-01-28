@@ -14,15 +14,20 @@ async def start_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
     return ENTER_FIRST_NAME
 
 
-async def handle_first_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def set_first_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["first_name"] = update.message.text.strip()
     await update.message.reply_text("Введите вашу фамилию:")
     return ENTER_LAST_NAME
 
 
-async def handle_last_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def set_last_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data["last_name"] = update.message.text.strip()
+    return await finish_registration(update, context)
+
+
+async def finish_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     first_name = context.user_data["first_name"]
-    last_name = update.message.text.strip()
+    last_name = context.user_data["last_name"]
 
     db = Database()
     service = UsersService(db)

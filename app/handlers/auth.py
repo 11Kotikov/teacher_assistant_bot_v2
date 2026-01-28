@@ -1,10 +1,11 @@
 # auth.py
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, ConversationHandler
 
 from app.config import Config
 from app.db.database import Database
 from app.services.users_service import UsersService
+from app.handlers.student_profile import start_registration
 from app.keyboards.main_menu import (
     STUDENT_MENU,
     STUDENT_NO_GROUP_MENU,
@@ -20,18 +21,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "👋 С возвращением, преподаватель!",
             reply_markup=TEACHER_MENU,
         )
-        return
+        return ConversationHandler.END
 
     # ---------- STUDENT ----------
     db = Database()
     service = UsersService(db)
     user = service.get_or_create_user(telegram_id)
 
-    # ❗ ЕСЛИ ПРОФИЛЬ НЕ ЗАПОЛНЕН — НИЧЕГО НЕ ДЕЛАЕМ
-    # FSM регистрации сам подхватит
+    # ❗ ЕСЛИ ПРОФИЛЬ НЕ ЗАПОЛНЕН — ЗАПУСКАЕМ РЕГИСТРАЦИЮ
     if user["first_name"] is None or user["last_name"] is None:
         db.close()
-        return
+        return await start_registration(update, context)
 
     # профиль есть, но группы нет
     if user["group_id"] is None:
@@ -41,7 +41,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=STUDENT_NO_GROUP_MENU,
         )
         db.close()
-        return
+        return ConversationHandler.END
 
     # всё готово
     await update.message.reply_text(
@@ -49,3 +49,4 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=STUDENT_MENU,
     )
     db.close()
+    return ConversationHandler.END
