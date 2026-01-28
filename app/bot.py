@@ -17,6 +17,8 @@ from app.handlers.auth import start, set_role
 
 # ---------- STUDENT ----------
 from app.handlers.student import (
+    show_assignments,
+    show_profile,
     start_submit,
     select_assignment,
     enter_solution,
@@ -164,6 +166,29 @@ def main() -> None:
     },
     fallbacks=[],
 )
+    
+    # ---------- STUDENT MENU HANDLERS ----------
+
+    app.add_handler(
+        MessageHandler(
+            filters.Regex("^📚 Мои задания$"),
+            show_assignments,
+        )
+    )
+
+    app.add_handler(
+        MessageHandler(
+            filters.Regex("^📝 Сдать работу$"),
+            start_submit,
+        )
+    )
+
+    app.add_handler(
+        MessageHandler(
+            filters.Regex("^👤 Профиль$"),
+            show_profile,
+        )
+    )
 
     # ---------- STUDENT FSM ----------
     student_conv = ConversationHandler(
@@ -181,7 +206,10 @@ def main() -> None:
     
     student_profile_conv = ConversationHandler(
         entry_points=[
-            CommandHandler("start", start_student_profile),
+            MessageHandler(
+                filters.Regex("^👤 Профиль$"),
+                start_student_profile,
+            ),
         ],
         states={
             ENTER_FIRST_NAME: [

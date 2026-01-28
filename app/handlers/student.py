@@ -97,3 +97,24 @@ async def enter_solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data.clear()
     return ConversationHandler.END
+
+async def show_profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    db = Database()
+    user_repo = UserRepository(db)
+
+    user = user_repo.get_by_telegram_id(update.effective_user.id)
+    db.close()
+
+    text = (
+        "👤 *Ваш профиль*\n\n"
+        f"ID: `{user['telegram_id']}`\n"
+        f"Имя: {user['first_name'] or '—'}\n"
+        f"Фамилия: {user['last_name'] or '—'}\n"
+    )
+
+    if user["group_id"]:
+        text += "\n👥 Группа назначена"
+    else:
+        text += "\n❗ Группа не назначена"
+
+    await update.message.reply_text(text, parse_mode="Markdown")

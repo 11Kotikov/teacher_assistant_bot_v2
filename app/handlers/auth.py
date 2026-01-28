@@ -20,6 +20,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     telegram_id = update.effective_user.id
     user = service.get_or_create_user(telegram_id)
 
+    # 1️⃣ Роль не выбрана
     if user["role"] is None:
         await update.message.reply_text(
             "👋 Привет! Выберите вашу роль:",
@@ -28,16 +29,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         db.close()
         return
 
+    # 2️⃣ Студент
     if user["role"] == "student":
-        # если профиль НЕ заполнен — просто выходим
-        if not user.get("first_name") or not user.get("last_name"):
+        if user["first_name"] is None or user["last_name"] is None:
+            await update.message.reply_text(
+                "✍️ Давайте заполним профиль."
+            )
             db.close()
+            await context.bot.send_message(
+                chat_id=telegram_id,
+                text="Введите имя:"
+            )
             return
 
         await update.message.reply_text(
             "👋 С возвращением, студент!",
             reply_markup=STUDENT_MENU,
         )
+
+    # 3️⃣ Преподаватель
     elif user["role"] == "teacher":
         await update.message.reply_text(
             "👋 С возвращением, преподаватель!",
