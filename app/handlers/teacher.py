@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
@@ -101,7 +102,8 @@ async def enter_description(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["description"] = description
 
     await update.message.reply_text(
-        "⏰ Введите дедлайн в формате YYYY-MM-DD HH:MM (например, 2025-03-31 18:00):"
+        "⏰ Введите дедлайн по Москве в формате YYYY-MM-DD HH:MM "
+        "(например, 2025-03-31 18:00):"
     )
     return ENTER_DEADLINE
 
@@ -112,11 +114,13 @@ async def enter_deadline(update: Update, context: ContextTypes.DEFAULT_TYPE):
         deadline = datetime.strptime(raw_deadline, "%Y-%m-%d %H:%M")
     except ValueError:
         await update.message.reply_text(
-            "❗ Некорректный формат. Используйте YYYY-MM-DD HH:MM (например, 2025-03-31 18:00)."
+            "❗ Некорректный формат. Используйте YYYY-MM-DD HH:MM "
+            "(например, 2025-03-31 18:00)."
         )
         return ENTER_DEADLINE
 
-    context.user_data["deadline"] = deadline.strftime("%Y-%m-%d %H:%M")
+    moscow_time = deadline.replace(tzinfo=ZoneInfo("Europe/Moscow"))
+    context.user_data["deadline"] = moscow_time.strftime("%Y-%m-%d %H:%M %z")
 
     db = Database()
     assignment_repo = AssignmentRepository(db)

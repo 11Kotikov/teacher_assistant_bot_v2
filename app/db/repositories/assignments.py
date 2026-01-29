@@ -12,7 +12,7 @@ class AssignmentRepository:
         columns = self.db.fetch_all("PRAGMA table_info(assignments)")
         column_names = {column["name"] for column in columns}
         if "deadline" not in column_names:
-            self.db.execute("ALTER TABLE assignments ADD COLUMN deadline TIMESTAMP")
+            self.db.execute("ALTER TABLE assignments ADD COLUMN deadline TEXT")
 
     def create(
         self,

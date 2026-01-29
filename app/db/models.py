@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS assignments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     description TEXT,
-    deadline TIMESTAMP,
+    deadline TEXT,
     subject_id INTEGER NOT NULL,
     group_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

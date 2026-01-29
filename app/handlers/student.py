@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
@@ -33,22 +34,25 @@ async def show_assignments(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = "📚 Задания для вашей группы:\n\n"
     for a in assignments:
         text += f"📌 {a['title']}\n{a['description']}\n\n"
+        deadline = None
         if a["deadline"]:
-            text += f"⏰ Дедлайн: {a['deadline']}\n\n"
-
-        if a["deadline"] and not submission_repo.exists(a["id"], user["telegram_id"]):
             try:
-                deadline = datetime.strptime(a["deadline"], "%Y-%m-%d %H:%M")
+                deadline = datetime.strptime(a["deadline"], "%Y-%m-%d %H:%M %z")
+                display_deadline = deadline.astimezone(
+                    ZoneInfo("Europe/Moscow")
+                ).strftime("%Y-%m-%d %H:%M MSK")
             except ValueError:
-                deadline = None
+                display_deadline = a["deadline"]
 
-            if deadline:
-                time_left = deadline - datetime.now()
-                if time_left > timedelta(hours=22):
-                    await update.message.reply_text(
-                        "⏳ Напоминание: до дедлайна по заднию "
-                        f"«{a['title']}» ещё есть время ({a['deadline']})."
-                    )
+            text += f"⏰ Дедлайн: {display_deadline}\n\n"
+
+        if deadline and not submission_repo.exists(a["id"], user["telegram_id"]):
+            time_left = deadline - datetime.now(ZoneInfo("Europe/Moscow"))
+            if time_left > timedelta(hours=22):
+                await update.message.reply_text(
+                    "⏳ Напоминание: до дедлайна по заданию "
+                    f"«{a['title']}» ещё есть время ({display_deadline})."
+                )
 
     await update.message.reply_text(text)
     db.close()
