@@ -1,5 +1,4 @@
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
@@ -21,6 +20,7 @@ from app.states.teacher_states import (
 )
 
 from app.keyboards.inline import subjects_keyboard, groups_keyboard
+from app.utils.timezone import get_moscow_tzinfo
 
 
 
@@ -119,7 +119,7 @@ async def enter_deadline(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return ENTER_DEADLINE
 
-    moscow_time = deadline.replace(tzinfo=ZoneInfo("Europe/Moscow"))
+    moscow_time = deadline.replace(tzinfo=get_moscow_tzinfo())
     context.user_data["deadline"] = moscow_time.strftime("%Y-%m-%d %H:%M %z")
 
     db = Database()

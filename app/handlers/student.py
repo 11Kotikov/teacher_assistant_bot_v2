@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
@@ -13,6 +12,7 @@ from app.guards.student_group_guard import ensure_student_has_group
 from app.keyboards.inline import assignments_keyboard
 
 from app.states.student_states import SELECT_ASSIGNMENT, ENTER_SOLUTION
+from app.utils.timezone import get_moscow_tzinfo
 
 async def show_assignments(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await ensure_student_has_group(update, context):
@@ -39,7 +39,7 @@ async def show_assignments(update: Update, context: ContextTypes.DEFAULT_TYPE):
             try:
                 deadline = datetime.strptime(a["deadline"], "%Y-%m-%d %H:%M %z")
                 display_deadline = deadline.astimezone(
-                    ZoneInfo("Europe/Moscow")
+                    get_moscow_tzinfo()
                 ).strftime("%Y-%m-%d %H:%M MSK")
             except ValueError:
                 display_deadline = a["deadline"]
@@ -47,7 +47,7 @@ async def show_assignments(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text += f"⏰ Дедлайн: {display_deadline}\n\n"
 
         if deadline and not submission_repo.exists(a["id"], user["telegram_id"]):
-            time_left = deadline - datetime.now(ZoneInfo("Europe/Moscow"))
+            time_left = deadline - datetime.now(get_moscow_tzinfo())
             if time_left > timedelta(hours=22):
                 await update.message.reply_text(
                     "⏳ Напоминание: до дедлайна по заданию "
