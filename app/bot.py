@@ -46,6 +46,7 @@ from app.handlers.teacher import (
     select_group as select_assignment_group,
     enter_title,
     enter_description,
+    enter_deadline,
 )
 
 from app.states.teacher_states import (
@@ -53,6 +54,7 @@ from app.states.teacher_states import (
     SELECT_GROUP as SELECT_ASSIGNMENT_GROUP,
     ENTER_TITLE,
     ENTER_DESCRIPTION,
+    ENTER_DEADLINE,
 )
 
 # ---------- TEACHER: REVIEW ----------
@@ -117,6 +119,9 @@ def main() -> None:
             ENTER_DESCRIPTION: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, enter_description),
             ],
+            ENTER_DEADLINE: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, enter_deadline),
+            ],
         },
         fallbacks=[],
     )
@@ -165,7 +170,7 @@ def main() -> None:
     },
     fallbacks=[],
 )
-
+    
     # ---------- STUDENT MENU HANDLERS ----------
 
     app.add_handler(
@@ -202,7 +207,7 @@ def main() -> None:
         },
         fallbacks=[],
     )
-
+    
     student_profile_conv = ConversationHandler(
         entry_points=[
             CommandHandler("start", start),

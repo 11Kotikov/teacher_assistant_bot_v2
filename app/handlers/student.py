@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
@@ -18,6 +20,7 @@ async def show_assignments(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db = Database()
     user_repo = UserRepository(db)
     assignment_repo = AssignmentRepository(db)
+    submission_repo = SubmissionRepository(db)
 
     user = user_repo.get_by_telegram_id(update.effective_user.id)
     assignments = assignment_repo.get_by_group(user["group_id"])
@@ -30,6 +33,22 @@ async def show_assignments(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = "📚 Задания для вашей группы:\n\n"
     for a in assignments:
         text += f"📌 {a['title']}\n{a['description']}\n\n"
+        if a["deadline"]:
+            text += f"⏰ Дедлайн: {a['deadline']}\n\n"
+
+        if a["deadline"] and not submission_repo.exists(a["id"], user["telegram_id"]):
+            try:
+                deadline = datetime.strptime(a["deadline"], "%Y-%m-%d %H:%M")
+            except ValueError:
+                deadline = None
+
+            if deadline:
+                time_left = deadline - datetime.now()
+                if time_left > timedelta(hours=22):
+                    await update.message.reply_text(
+                        "⏳ Напоминание: до дедлайна по заднию "
+                        f"«{a['title']}» ещё есть время ({a['deadline']})."
+                    )
 
     await update.message.reply_text(text)
     db.close()

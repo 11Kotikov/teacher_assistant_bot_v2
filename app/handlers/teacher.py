@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
@@ -9,7 +11,13 @@ from app.db.repositories.groups import GroupRepository
 from app.db.repositories.users import UserRepository  # ← добавь импорт
 
 
-from app.states.teacher_states import ENTER_DESCRIPTION, ENTER_TITLE, SELECT_SUBJECT, SELECT_GROUP
+from app.states.teacher_states import (
+    ENTER_DEADLINE,
+    ENTER_DESCRIPTION,
+    ENTER_TITLE,
+    SELECT_SUBJECT,
+    SELECT_GROUP,
+)
 
 from app.keyboards.inline import subjects_keyboard, groups_keyboard
 
@@ -92,12 +100,31 @@ async def enter_description(update: Update, context: ContextTypes.DEFAULT_TYPE):
     description = update.message.text
     context.user_data["description"] = description
 
+    await update.message.reply_text(
+        "⏰ Введите дедлайн в формате YYYY-MM-DD HH:MM (например, 2025-03-31 18:00):"
+    )
+    return ENTER_DEADLINE
+
+
+async def enter_deadline(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    raw_deadline = update.message.text.strip()
+    try:
+        deadline = datetime.strptime(raw_deadline, "%Y-%m-%d %H:%M")
+    except ValueError:
+        await update.message.reply_text(
+            "❗ Некорректный формат. Используйте YYYY-MM-DD HH:MM (например, 2025-03-31 18:00)."
+        )
+        return ENTER_DEADLINE
+
+    context.user_data["deadline"] = deadline.strftime("%Y-%m-%d %H:%M")
+
     db = Database()
     assignment_repo = AssignmentRepository(db)
 
     assignment_repo.create(
         title=context.user_data["title"],
         description=context.user_data["description"],
+        deadline=context.user_data["deadline"],
         subject_id=context.user_data["subject_id"],
         group_id=context.user_data["group_id"],
     )

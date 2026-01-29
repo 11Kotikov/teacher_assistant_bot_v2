@@ -14,6 +14,7 @@ class AssignmentService:
         subject_name: str,
         title: str,
         description: str,
+        deadline: str | None,
         group_id: int,
     ):
         subjects = self.subjects.get_by_teacher(teacher_id)
@@ -24,6 +25,7 @@ class AssignmentService:
         self.assignments.create(
             title=title,
             description=description,
+            deadline=deadline,
             subject_id=subject["id"],
             group_id=group_id,
         )
