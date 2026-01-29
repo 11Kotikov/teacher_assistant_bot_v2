@@ -22,6 +22,7 @@ from app.handlers.student import (
     start_submit,
     select_assignment,
     enter_solution,
+    select_student_subject,
 )
 
 from app.states.student_states import (
@@ -61,11 +62,13 @@ from app.states.teacher_states import (
 from app.handlers.teacher_review import (
     start_review_submissions,
     select_review_group,
+    select_review_subject,
     select_review_assignment,
 )
 
 from app.states.teacher_review_states import (
     SELECT_REVIEW_GROUP,
+    SELECT_REVIEW_SUBJECT,
     SELECT_REVIEW_ASSIGNMENT,
 )
 
@@ -135,6 +138,9 @@ def main() -> None:
             SELECT_REVIEW_GROUP: [
                 CallbackQueryHandler(select_review_group, pattern="^group_"),
             ],
+            SELECT_REVIEW_SUBJECT: [
+                CallbackQueryHandler(select_review_subject, pattern="^review_subject_"),
+            ],
             SELECT_REVIEW_ASSIGNMENT: [
                 CallbackQueryHandler(select_review_assignment, pattern="^assignment_"),
             ],
@@ -178,6 +184,9 @@ def main() -> None:
             filters.Regex("^📚 Мои задания$"),
             show_assignments,
         )
+    )
+    app.add_handler(
+        CallbackQueryHandler(select_student_subject, pattern="^student_subject_")
     )
 
     app.add_handler(

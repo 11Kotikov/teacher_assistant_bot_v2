@@ -45,3 +45,23 @@ class AssignmentRepository:
             "SELECT * FROM assignments WHERE group_id = ?",
             (group_id,)
         )
+
+    def get_by_group_and_subject(self, group_id: int, subject_id: int):
+        return self.db.fetch_all(
+            "SELECT * FROM assignments WHERE group_id = ? AND subject_id = ?",
+            (group_id, subject_id),
+        )
+
+    def get_subjects_by_group(self, group_id: int, teacher_id: int | None = None):
+        query = """
+            SELECT DISTINCT subjects.*
+            FROM subjects
+            JOIN assignments ON assignments.subject_id = subjects.id
+            WHERE assignments.group_id = ?
+        """
+        params = [group_id]
+        if teacher_id is not None:
+            query += " AND subjects.teacher_id = ?"
+            params.append(teacher_id)
+        query += " ORDER BY subjects.name"
+        return self.db.fetch_all(query, tuple(params))

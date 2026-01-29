@@ -9,7 +9,7 @@ from app.db.repositories.users import UserRepository
 from app.db.repositories.assignments import AssignmentRepository
 
 from app.guards.student_group_guard import ensure_student_has_group
-from app.keyboards.inline import assignments_keyboard
+from app.keyboards.inline import assignments_keyboard, student_subjects_keyboard
 
 from app.states.student_states import SELECT_ASSIGNMENT, ENTER_SOLUTION
 from app.utils.timezone import get_moscow_tzinfo
@@ -21,17 +21,41 @@ async def show_assignments(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db = Database()
     user_repo = UserRepository(db)
     assignment_repo = AssignmentRepository(db)
-    submission_repo = SubmissionRepository(db)
 
     user = user_repo.get_by_telegram_id(update.effective_user.id)
-    assignments = assignment_repo.get_by_group(user["group_id"])
+    subjects = assignment_repo.get_subjects_by_group(user["group_id"])
 
-    if not assignments:
-        await update.message.reply_text("Заданий для вашей группы пока нет.")
+    if not subjects:
+        await update.message.reply_text("Для вашей группы нет заданий.")
         db.close()
         return
 
-    text = "📚 Задания для вашей группы:\n\n"
+    await update.message.reply_text(
+        "📚 Выберите предмет:",
+        reply_markup=student_subjects_keyboard(subjects),
+    )
+    db.close()
+
+async def select_student_subject(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    subject_id = int(query.data.split("_")[2])
+
+    db = Database()
+    user_repo = UserRepository(db)
+    assignment_repo = AssignmentRepository(db)
+    submission_repo = SubmissionRepository(db)
+
+    user = user_repo.get_by_telegram_id(update.effective_user.id)
+    assignments = assignment_repo.get_by_group_and_subject(user["group_id"], subject_id)
+
+    if not assignments:
+        await query.edit_message_text("Для этого предмета нет заданий.")
+        db.close()
+        return
+
+    text = "📚 Задания по выбранному предмету:\n\n"
     for a in assignments:
         text += f"📌 {a['title']}\n{a['description']}\n\n"
         deadline = None
@@ -54,7 +78,7 @@ async def show_assignments(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"«{a['title']}» ещё есть время ({display_deadline})."
                 )
 
-    await update.message.reply_text(text)
+    await query.edit_message_text(text)
     db.close()
 
 async def start_submit(update: Update, context: ContextTypes.DEFAULT_TYPE):

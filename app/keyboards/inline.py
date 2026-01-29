@@ -8,6 +8,19 @@ def subjects_keyboard(subjects):
     ]
     return InlineKeyboardMarkup(keyboard)
 
+def subject_filter_keyboard(subjects, prefix: str):
+    keyboard = [
+        [InlineKeyboardButton(text=s["name"], callback_data=f"{prefix}{s['id']}")]
+        for s in subjects
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+def review_subjects_keyboard(subjects):
+    return subject_filter_keyboard(subjects, "review_subject_")
+
+def student_subjects_keyboard(subjects):
+    return subject_filter_keyboard(subjects, "student_subject_")
+
 def groups_keyboard(groups):
     keyboard = [
         [InlineKeyboardButton(g["name"], callback_data=f"group_{g['id']}")]
