@@ -25,7 +25,7 @@ class UserRepository:
             "UPDATE users SET group_id = ? WHERE telegram_id = ?",
             (group_id, telegram_id),
         )
-        
+
     def get_students_by_group(self, group_id: int):
         return self.db.fetch_all(
             """
@@ -45,12 +45,10 @@ class UserRepository:
             """
         )
 
-          
     def get_all(self):
         cursor = self.db.execute("SELECT * FROM users")
         return cursor.fetchall()
-    
-    
+
     def update_profile(self, telegram_id: int, first_name: str, last_name: str):
         self.db.execute(
             """
@@ -60,6 +58,12 @@ class UserRepository:
             """,
             (first_name, last_name, telegram_id),
         )
-        
+
+    def update_role(self, telegram_id: int, role: str):
+        self.db.execute(
+            "UPDATE users SET role = ? WHERE telegram_id = ?",
+            (role, telegram_id),
+        )
+
     def _row_to_dict(self, row):
         return dict(row) if row else None

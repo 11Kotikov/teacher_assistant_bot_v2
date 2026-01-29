@@ -17,6 +17,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # ---------- TEACHER ----------
     if telegram_id == Config.TEACHER_TELEGRAM_ID:
+        db = Database()
+        service = UsersService(db)
+        service.get_or_create_user(telegram_id)
+        db.close()
         await update.message.reply_text(
             "👋 С возвращением, преподаватель!",
             reply_markup=TEACHER_MENU,
