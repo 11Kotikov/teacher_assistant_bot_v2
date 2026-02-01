@@ -1,3 +1,4 @@
+import asyncio
 import signal
 import sys
 import logging
@@ -240,11 +241,17 @@ def main() -> None:
     app.add_handler(assign_student_conv)
     app.add_handler(student_conv)
 
+    async def _shutdown():
+        logger.info("Bot stopping...")
+        await app.stop()
+        await app.shutdown()
+        sys.exit(0)
+
     def shutdown(signum, frame):
         logger.info("Bot stopping...")
-        app.stop()
-        app.shutdown()
-        sys.exit(0)
+        loop = asyncio.get_event_loop()
+        loop.create_task(_shutdown())
+
 
     signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGTERM, shutdown)
