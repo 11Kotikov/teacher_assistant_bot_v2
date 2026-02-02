@@ -82,7 +82,7 @@ async def select_assign_student(update: Update, context: ContextTypes.DEFAULT_TY
             text=(
                 f"✅ Вас добавили в группу *{group['name']}*\n\n"
                 "📚 Теперь вам доступны задания.\n"
-                "Используйте команду /submit"
+                "Используйте кнопки меню бота ⌨️"
             ),
             parse_mode="Markdown",
         )
