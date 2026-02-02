@@ -8,7 +8,7 @@ from app.db.database import Database
 from app.db.repositories.assignments import AssignmentRepository
 from app.db.repositories.subjects import SubjectRepository
 from app.db.repositories.groups import GroupRepository
-from app.db.repositories.users import UserRepository  # ← добавь импорт
+from app.db.repositories.users import UserRepository 
 
 
 from app.states.teacher_states import (
