@@ -181,4 +181,4 @@ pyrightconfig.json
 .env
 
 logs/
-scripts/
+my_scripts/
