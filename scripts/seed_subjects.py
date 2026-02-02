@@ -8,7 +8,7 @@ from app.db.database import Database
 from app.db.repositories.subjects import SubjectRepository
 
 
-TEACHER_TELEGRAM_ID = 205411683
+TEACHER_TELEGRAM_ID = 0
 
 BASE_SUBJECTS = [
     "Программирование",
