@@ -1,5 +1,4 @@
 import signal
-import sys
 import logging
 
 from telegram.ext import (

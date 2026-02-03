@@ -27,12 +27,3 @@ STUDENT_NO_GROUP_MENU = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True,
 )
-
-from telegram import ReplyKeyboardMarkup
-
-STUDENT_PROFILE_REQUIRED_MENU = ReplyKeyboardMarkup(
-    [
-        ["📝 Заполнить профиль"],
-    ],
-    resize_keyboard=True,
-)

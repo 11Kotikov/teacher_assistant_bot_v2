@@ -30,13 +30,6 @@ class AssignmentRepository:
             (title, description, deadline, subject_id, group_id),
         )
 
-    def get_by_group(self, group_id: int):
-        cur = self.db.execute(
-            "SELECT * FROM assignments WHERE group_id = ?",
-            (group_id,),
-        )
-        return cur.fetchall()
-    
     def get_all(self):
         return self.db.fetch_all("SELECT * FROM assignments")
     
