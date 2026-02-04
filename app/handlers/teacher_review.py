@@ -112,7 +112,8 @@ async def select_review_assignment(update: Update, context: ContextTypes.DEFAULT
         date = s["created_at"]
 
         text += (
-            f"👤 Студент: {user['telegram_id']}\n"
+            f"👤 Студент: {user['first_name'] and user['last_name']}\n"
+            f"🔗 TgID: {user['telegram_id']}\n"
             f"🕒 Сдано: {date}\n"
             f"📝 Решение:\n{s['text']}\n"
             f"{'-'*20}\n"
