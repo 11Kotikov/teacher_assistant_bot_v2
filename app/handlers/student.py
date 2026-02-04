@@ -77,7 +77,7 @@ async def select_student_subject(update: Update, context: ContextTypes.DEFAULT_T
         if deadline and not submission_repo.exists(a["id"], user["telegram_id"]):
             time_left = deadline - datetime.now(get_moscow_tzinfo())
             if time_left > timedelta(hours=22):
-                await update.message.reply_text(
+                await query.message.reply_text(
                     "⏳ Напоминание: до дедлайна по заданию "
                     f"«{a['title']}» ещё есть время ({display_deadline})."
                 )

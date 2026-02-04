@@ -7,6 +7,7 @@ DB_PATH = BASE_DIR / "data" / "bot.db"
 
 class Database:
     def __init__(self):
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         self.connection = sqlite3.connect(DB_PATH)
         self.connection.row_factory = sqlite3.Row
 
