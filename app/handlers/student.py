@@ -9,9 +9,13 @@ from app.db.repositories.users import UserRepository
 from app.db.repositories.assignments import AssignmentRepository
 
 from app.guards.student_group_guard import ensure_student_has_group
-from app.keyboards.inline import assignments_keyboard, student_subjects_keyboard
+from app.keyboards.inline import (
+    student_subjects_keyboard,
+    submit_subjects_keyboard,
+    submit_assignments_keyboard,
+)
 
-from app.states.student_states import SELECT_ASSIGNMENT, ENTER_SOLUTION
+from app.states.student_states import SELECT_SUBJECT, SELECT_ASSIGNMENT, ENTER_SOLUTION
 from app.utils.timezone import get_moscow_tzinfo
 
 async def show_assignments(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -90,9 +94,9 @@ async def start_submit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     assignment_repo = AssignmentRepository(db)
 
     user = user_repo.get_by_telegram_id(update.effective_user.id)
-    assignments = assignment_repo.get_by_group(user["group_id"])
+    subjects = assignment_repo.get_subjects_by_group(user["group_id"])
 
-    if not assignments:
+    if not subjects:
         await update.message.reply_text(
             "📭 Для вашей группы пока нет заданий."
         )
@@ -100,10 +104,49 @@ async def start_submit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     await update.message.reply_text(
-        "📌 Выберите задание:",
-        reply_markup=assignments_keyboard(assignments),
+        "📚 Выберите предмет:",
+        reply_markup=submit_subjects_keyboard(subjects),
     )
 
+    db.close()
+    return SELECT_SUBJECT
+
+async def select_submit_subject(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    subject_id = int(query.data.split("_")[2])
+
+    db = Database()
+    user_repo = UserRepository(db)
+    assignment_repo = AssignmentRepository(db)
+
+    user = user_repo.get_by_telegram_id(update.effective_user.id)
+    assignments = assignment_repo.get_by_group_and_subject(user["group_id"], subject_id)
+
+    if not assignments:
+        await query.edit_message_text("Для этого предмета нет заданий.")
+        db.close()
+        return ConversationHandler.END
+
+    text = "📌 Доступные задания:\n\n"
+    for a in assignments:
+        text += f"📌 {a['title']}\n{a['description']}\n\n"
+        if a["deadline"]:
+            try:
+                deadline = datetime.strptime(a["deadline"], "%Y-%m-%d %H:%M %z")
+                display_deadline = deadline.astimezone(
+                    get_moscow_tzinfo()
+                ).strftime("%Y-%m-%d %H:%M MSK")
+            except ValueError:
+                display_deadline = a["deadline"]
+
+            text += f"⏰ Дедлайн: {display_deadline}\n\n"
+
+    await query.edit_message_text(
+        text,
+        reply_markup=submit_assignments_keyboard(assignments),
+    )
     db.close()
     return SELECT_ASSIGNMENT
 
@@ -111,7 +154,7 @@ async def select_assignment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    assignment_id = int(query.data.split("_")[1])
+    assignment_id = int(query.data.split("_")[2])
     context.user_data["assignment_id"] = assignment_id
 
     await query.edit_message_text("✏️ Введите ваше решение:")

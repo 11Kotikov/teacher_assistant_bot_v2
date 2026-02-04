@@ -8,6 +8,7 @@ def subjects_keyboard(subjects):
     ]
     return InlineKeyboardMarkup(keyboard)
 
+
 def subject_filter_keyboard(subjects, prefix: str):
     keyboard = [
         [InlineKeyboardButton(text=s["name"], callback_data=f"{prefix}{s['id']}")]
@@ -15,11 +16,18 @@ def subject_filter_keyboard(subjects, prefix: str):
     ]
     return InlineKeyboardMarkup(keyboard)
 
+
 def review_subjects_keyboard(subjects):
     return subject_filter_keyboard(subjects, "review_subject_")
 
+
 def student_subjects_keyboard(subjects):
     return subject_filter_keyboard(subjects, "student_subject_")
+
+
+def submit_subjects_keyboard(subjects):
+    return subject_filter_keyboard(subjects, "submit_subject_")
+
 
 def groups_keyboard(groups):
     keyboard = [
@@ -28,12 +36,27 @@ def groups_keyboard(groups):
     ]
     return InlineKeyboardMarkup(keyboard)
 
+
 def assignments_keyboard(assignments):
     keyboard = [
         [InlineKeyboardButton(a["title"], callback_data=f"assignment_{a['id']}")]
         for a in assignments
     ]
     return InlineKeyboardMarkup(keyboard)
+
+
+def submit_assignments_keyboard(assignments):
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text=f"✍️ Добавить решение: {a['title']}",
+                callback_data=f"submit_assignment_{a['id']}",
+            )
+        ]
+        for a in assignments
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
 
 def students_keyboard(students):
     keyboard = []

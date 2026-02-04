@@ -19,12 +19,14 @@ from app.handlers.student import (
     show_assignments,
     show_profile,
     start_submit,
+    select_submit_subject,
     select_assignment,
     enter_solution,
     select_student_subject,
 )
 
 from app.states.student_states import (
+    SELECT_SUBJECT as STUDENT_SELECT_SUBJECT,
     SELECT_ASSIGNMENT,
     ENTER_SOLUTION,
 )
@@ -190,13 +192,6 @@ def main() -> None:
 
     app.add_handler(
         MessageHandler(
-            filters.Regex("^📝 Сдать работу$"),
-            start_submit,
-        )
-    )
-
-    app.add_handler(
-        MessageHandler(
             filters.Regex("^👤 Профиль$"),
             show_profile,
         )
@@ -204,10 +199,16 @@ def main() -> None:
 
     # ---------- STUDENT FSM ----------
     student_conv = ConversationHandler(
-        entry_points=[CommandHandler("submit", start_submit)],
+        entry_points=[
+            CommandHandler("submit", start_submit),
+            MessageHandler(filters.Regex("^📝 Сдать работу$"), start_submit),
+        ],
         states={
+            STUDENT_SELECT_SUBJECT: [
+                CallbackQueryHandler(select_submit_subject, pattern="^submit_subject_"),
+            ],
             SELECT_ASSIGNMENT: [
-                CallbackQueryHandler(select_assignment, pattern="^assignment_"),
+                CallbackQueryHandler(select_assignment, pattern="^submit_assignment_"),
             ],
             ENTER_SOLUTION: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, enter_solution),
