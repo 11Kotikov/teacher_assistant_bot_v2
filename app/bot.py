@@ -12,7 +12,7 @@ from telegram.ext import (
 
 from app.config import Config, validate_config
 from app.logging import setup_logging
-from app.handlers.auth import start
+from app.handlers.auth import start, reset
 
 # ---------- STUDENT ----------
 from app.handlers.student import (
@@ -127,7 +127,10 @@ def main() -> None:
                 MessageHandler(filters.TEXT & ~filters.COMMAND, enter_deadline),
             ],
         },
-        fallbacks=[],
+        fallbacks=[
+            CommandHandler("start", start),
+            CommandHandler("reset", reset),
+        ],
     )
 
     # ---------- REVIEW FSM ----------
@@ -146,7 +149,10 @@ def main() -> None:
                 CallbackQueryHandler(select_review_assignment, pattern="^assignment_"),
             ],
         },
-        fallbacks=[],
+        fallbacks=[
+            CommandHandler("start", start),
+            CommandHandler("reset", reset),
+        ],
     )
 
     # ---------- GROUPS FSM ----------
@@ -159,7 +165,10 @@ def main() -> None:
                 CallbackQueryHandler(select_groups_group, pattern="^group_"),
             ],
         },
-        fallbacks=[],
+        fallbacks=[
+            CommandHandler("start", start),
+            CommandHandler("reset", reset),
+        ],
     )
 
     # ---------- ASSIGN STUDENT FSM (D3.1) ----------
@@ -175,7 +184,10 @@ def main() -> None:
             CallbackQueryHandler(select_assign_student, pattern="^student_"),
         ],
     },
-    fallbacks=[],
+    fallbacks=[
+        CommandHandler("start", start),
+        CommandHandler("reset", reset),
+    ],
 )
     
     # ---------- STUDENT MENU HANDLERS ----------
@@ -214,7 +226,10 @@ def main() -> None:
                 MessageHandler(filters.TEXT & ~filters.COMMAND, enter_solution),
             ],
         },
-        fallbacks=[],
+        fallbacks=[
+            CommandHandler("start", start),
+            CommandHandler("reset", reset),
+        ],
     )
     
     student_profile_conv = ConversationHandler(
@@ -229,7 +244,9 @@ def main() -> None:
                 MessageHandler(filters.TEXT & ~filters.COMMAND, set_last_name),
             ],
         },
-        fallbacks=[],
+        fallbacks=[
+            CommandHandler("reset", reset),
+        ],
     )
 
     # Register FSMs

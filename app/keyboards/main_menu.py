@@ -6,6 +6,7 @@ STUDENT_MENU = ReplyKeyboardMarkup(
         ["📝 Сдать работу"],
         ["📊 Мои оценки"],
         ["👤 Профиль"],
+        ["/reset"],
     ],
     resize_keyboard=True,
 )
@@ -16,6 +17,7 @@ TEACHER_MENU = ReplyKeyboardMarkup(
         ["📂 Проверить работы"],
         ["👥 Группы"],
         ["➕ Назначить студента"],
+        ["/reset"],
     ],
     resize_keyboard=True,
 )
@@ -24,6 +26,7 @@ STUDENT_NO_GROUP_MENU = ReplyKeyboardMarkup(
     [
         ["👤 Профиль"],
         ["ℹ️ Почему нет заданий?"],
+        ["/reset"],
     ],
     resize_keyboard=True,
 )

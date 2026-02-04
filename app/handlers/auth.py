@@ -22,7 +22,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         service.get_or_create_user(telegram_id)
         db.close()
         await update.message.reply_text(
-            "👋 С возвращением, преподаватель!",
+            "👋 С возвращением, преподаватель!\n"
+            "Если меню не работает — напишите /reset.",
             reply_markup=TEACHER_MENU,
         )
         return ConversationHandler.END
@@ -41,7 +42,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user["group_id"] is None:
         await update.message.reply_text(
             "⏳ Вы ещё не назначены в группу.\n\n"
-            "📌 Обратитесь к преподавателю или дождитесь назначения.",
+            "📌 Обратитесь к преподавателю или дождитесь назначения.\n\n"
+            "Если меню не работает — напишите /reset.",
             reply_markup=STUDENT_NO_GROUP_MENU,
         )
         db.close()
@@ -49,8 +51,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # всё готово
     await update.message.reply_text(
-        "👋 С возвращением!",
+        "👋 С возвращением!\n"
+        "Если меню не рабоает — напишите /reset.",
         reply_markup=STUDENT_MENU,
     )
     db.close()
     return ConversationHandler.END
+
+
+async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.clear()
+    context.chat_data.clear()
+    return await start(update, context)
